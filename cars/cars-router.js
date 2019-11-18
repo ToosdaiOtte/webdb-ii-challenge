@@ -62,11 +62,40 @@ router.put('/:id', (req, res) => {
     const {id} = req.params;
     const changes = req.body;
 
-    db('car-dealer').where({id}).update(changes)
+    if(!changes.VIN && !changes.make && !changes.model && !changes.mileage && !changes.transmissionType && !changes.titleStatus){
+        res.status(400).json({
+            message: 'Please add a VIN, make, model, mileage, transmissionType, or titleStatus to update'
+        })
+    } else {
+        db('car-dealer').where({id}).update(changes)
+        .then(count => {
+            if(count){
+                res.status(200).json({
+                    updated: count
+                })
+            } else {
+                res.status(404).json({
+                    message: 'Invalid ID'
+                })
+            }
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: 'Error editing database',
+                err
+            })
+        })        
+    }
+});
+
+router.delete('/:id', (req, res) => {
+    const {id} = req.params;
+
+    db('car-dealer').where({id}).del()
     .then(count => {
         if(count){
             res.status(200).json({
-                updated: count
+                deleted: count
             })
         } else {
             res.status(404).json({
@@ -76,14 +105,10 @@ router.put('/:id', (req, res) => {
     })
     .catch(err => {
         res.status(500).json({
-            message: 'Error editing database',
+            message: 'Error deleted from database',
             err
         })
     })
-});
-
-router.delete('/:id', (req, res) => {
-
 });
 
 module.exports = router;
